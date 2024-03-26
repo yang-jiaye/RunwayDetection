@@ -140,10 +140,16 @@ Output:
 def detectAirportRunway(img, draw=False, res_name="draw_result"):
     # hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     # gray = hsv[:,:,0]
+    if img is None:
+        print("[RunwayDetect]: Image empty")
+    height, width, _ = img.shape
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    lsd = cv2.createLineSegmentDetector(scale=0.8, sigma_scale=0.6, quant=2.0, ang_th=22.5, log_eps=0.0, density_th=0.7, n_bins=1024)
-    lines, width, prec, nfa = lsd.detect(gray)
 
+    # detect line segmentation
+    lsd = cv2.createLineSegmentDetector(scale=0.8, sigma_scale=0.6, quant=2.0, ang_th=22.5, log_eps=0.0, density_th=0.7, n_bins=1024)
+    lines, _, prec, nfa = lsd.detect(gray)
+
+    # set threshold
     length_thres = 2
     gray_thres = 120
 
@@ -168,7 +174,12 @@ def detectAirportRunway(img, draw=False, res_name="draw_result"):
         rhoList.append(rho)
         lineList.append(line)
 
-    N = 100
+    # set grid numbers, which is related to size of image
+    # to do: find relation between grid num and image size
+    if width * height < 100000:
+        N = 40
+    else:
+        N = 100
     Ntheta = N
     Nrho = N
     maxRho = np.sqrt(img.shape[0]**2 + img.shape[1]**2)
@@ -201,10 +212,11 @@ def detectAirportRunway(img, draw=False, res_name="draw_result"):
     line1 = computeResult(thetaThoGrid[second_max_index[0]][second_max_index[1]], lineImg, color = (0, 255, 0), draw = draw)
 
     if draw == True:
-        cv2.imwrite("results/"+res_name+".jpg", lineImg)
+        cv2.imwrite("results/"+res_name+".png", lineImg)
+    # cv2.imwrite("test.png", lineImg)
 
     return line0, line1
 
 if __name__ == "__main__":
-    img = cv2.imread("1.jpg")
+    img = cv2.imread("origin.jpg")
     detectAirportRunway(img, draw=True)
