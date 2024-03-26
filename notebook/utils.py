@@ -14,7 +14,7 @@ Output:
     To distinguish 2 line segments with same distance to origin and slope but in different sides of origin,
     we define that for line with negative x intersect, rho is negative with abs equal to distance to origin. 
 '''
-def computehoughTransformCoord(x1, y1, x2, y2):
+def computeHoughTransformCoord(x1, y1, x2, y2):
 
     if y1 == y2:
         theta = np.pi/2
@@ -38,6 +38,9 @@ def computehoughTransformCoord(x1, y1, x2, y2):
     
     return theta, rho, length
 
+'''
+compute average gray scale around a line
+'''
 def average_grayscale_along_line(image, x1, y1, x2, y2):
     # Calculate the length of the line
     L = np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
@@ -96,6 +99,7 @@ def computeResult(grid: list, lineImg, color = (0, 0, 255), draw=False):
     y = []
     weights = []
     for line, d in zip(lines, ds):
+        line = line[0]
         x.append(line[0])
         x.append(line[2])
         y.append(line[1])
@@ -120,8 +124,9 @@ def computeResult(grid: list, lineImg, color = (0, 0, 255), draw=False):
             LL = 3000
             
             cv2.line(lineImg, (0, int(c)), (LL, int( LL *m + c)), color, 1)
-            # for line, d in zip(lines, ds):
-            #     cv2.line(lineImg, (int(line[0]), int(line[1])), (int(line[2]), int(line[3])), (255, 0, 255), 1)
+            for line, d in zip(lines, ds):
+                line = line[0]
+                cv2.line(lineImg, (int(line[0]), int(line[1])), (int(line[2]), int(line[3])), (255, 0, 255), 1)
 
     return theta, rho
 
@@ -139,22 +144,22 @@ def detectAirportRunway(img, draw=False, res_name="draw_result"):
     lsd = cv2.createLineSegmentDetector(0)
     lines, width, prec, nfa = lsd.detect(gray)
 
-    LLL = 2
-    thred = 120
+    length_thres = 2
+    gray_thres = 120
 
     thetaList = []
     dList = []
     rhoList = []
     lineList = []
     for line in lines:
-        line = line[0]
-
-        average_grayscale = average_grayscale_along_line(gray, line[0], line[1], line[2], line[3])
-        if average_grayscale < thred:
+        # check average gray scale
+        x1, y1, x2, y2 = map(int, line[0])
+        average_grayscale = average_grayscale_along_line(gray, x1, y1, x2, y2)
+        if average_grayscale < gray_thres:
             continue
 
-        theta, rho, d = computehoughTransformCoord(line[0], line[1], line[2], line[3])
-        if d < LLL:
+        theta, rho, d = computeHoughTransformCoord(x1, y1, x2, y2)
+        if d < length_thres:
             continue
         if abs(np.abs(theta) - np.pi/2) < np.pi / 16 or np.abs(theta) > 1.5707963:
             continue
