@@ -141,7 +141,7 @@ def detectAirportRunway(img, draw=False, res_name="draw_result"):
     # hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     # gray = hsv[:,:,0]
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    lsd = cv2.createLineSegmentDetector(0)
+    lsd = cv2.createLineSegmentDetector(scale=0.8, sigma_scale=0.6, quant=2.0, ang_th=22.5, log_eps=0.0, density_th=0.7, n_bins=1024)
     lines, width, prec, nfa = lsd.detect(gray)
 
     length_thres = 2
@@ -168,7 +168,7 @@ def detectAirportRunway(img, draw=False, res_name="draw_result"):
         rhoList.append(rho)
         lineList.append(line)
 
-    N = 50
+    N = 100
     Ntheta = N
     Nrho = N
     maxRho = np.sqrt(img.shape[0]**2 + img.shape[1]**2)
@@ -187,19 +187,14 @@ def detectAirportRunway(img, draw=False, res_name="draw_result"):
 
     # 找到最大元素的索引
     max_index = np.unravel_index(np.argmax(totalLengthGrid), totalLengthGrid.shape)
-    max_d = totalLengthGrid[max_index]
-
-    # 将最大元素设为负无穷
     totalLengthGrid[max_index] = -np.inf
 
     # 找到第二大元素的索引
     second_max_index = np.unravel_index(np.argmax(totalLengthGrid), totalLengthGrid.shape)
-    second_max_d = totalLengthGrid[second_max_index]
-
     totalLengthGrid[second_max_index] = -np.inf
 
+    # 找到第三大元素的索引
     third_max_index = np.unravel_index(np.argmax(totalLengthGrid), totalLengthGrid.shape)
-    third_max_d = totalLengthGrid[third_max_index]
 
     lineImg = img.copy()
     line0 = computeResult(thetaThoGrid[max_index[0]][max_index[1]], lineImg, color = (0, 0, 255), draw = draw)
