@@ -212,7 +212,7 @@ def detectAirportRunway(img, draw=False, res_name="draw_result"):
     line1 = computeResult(thetaThoGrid[second_max_index[0]][second_max_index[1]], lineImg, color = (0, 255, 0), draw = draw)
 
     if draw == True:
-        cv2.imwrite("results/"+res_name+".png", lineImg)
+        cv2.imwrite("images_result/"+res_name+".png", lineImg)
     # cv2.imwrite("test.png", lineImg)
 
     return line0, line1
