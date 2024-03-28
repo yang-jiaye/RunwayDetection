@@ -111,22 +111,25 @@ def computeResult(grid: list, lineImg, color = (0, 0, 255), draw=False):
     w = np.diag(np.sqrt(weights))
     m, c = np.linalg.lstsq(w @ A, y @ w, rcond=None)[0]
 
-    theta = np.arctan(-1/m)
-    rho = c * np.sin(theta)
+    if(m == 0):
+        theta = np.pi/2
+        rho = c
+    else:
+        theta = np.arctan(-1/m)
+        rho = c * np.sin(theta)
 
     if draw == True:
+        # draw result lines
         if theta == 0:
             cv2.line(lineImg, (rho, -1000), (rho, 1000), color, 1)
         elif not np.isnan(theta):
-            # 在图像上绘制直线
-            m = 1/np.tan(-theta)
-            c = rho / np.sin(theta)
             LL = 3000
-            
             cv2.line(lineImg, (0, int(c)), (LL, int( LL *m + c)), color, 1)
-            for line, d in zip(lines, ds):
-                line = line[0]
-                cv2.line(lineImg, (int(line[0]), int(line[1])), (int(line[2]), int(line[3])), (255, 0, 255), 1)
+
+        # draw grid lines    
+        for line, d in zip(lines, ds):
+            x1, y1, x2, y2 = map(int, line[0])
+            cv2.line(lineImg, (x1, y1), (x2, y2), (255, 0, 255), 1)
 
     return theta, rho
 
@@ -136,7 +139,6 @@ Input:
 Output:
     line0, line1: 2 runwayline parameters containing (theta, rho)
 '''
-
 def detectAirportRunway(img, draw=False, res_name="draw_result"):
     # hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     # gray = hsv[:,:,0]
@@ -151,7 +153,7 @@ def detectAirportRunway(img, draw=False, res_name="draw_result"):
 
     # set threshold
     length_thres = 2
-    gray_thres = 120
+    gray_thres = 50
 
     thetaList = []
     dList = []
