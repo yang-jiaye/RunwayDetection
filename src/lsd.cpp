@@ -28,8 +28,8 @@ cv::Vec3f getRhoThetaLength(cv::Vec4f line)
 
 std::vector<cv::Vec2f> runwayLineDetector(
                                             cv::Mat bgrImage, 
-                                            bool writeLSDImg = false, //write LSD results
-                                            bool writeFilteredImg = false //write filtered results
+                                            bool writeLSDImg, //write LSD results
+                                            bool writeFilteredImg//write filtered results
                                          )
 {
     //=====================================================
@@ -53,7 +53,7 @@ std::vector<cv::Vec2f> runwayLineDetector(
 
     double endTime = double(cv::getTickCount());
     double durationTime = (endTime - startTime) * 1000 / cv::getTickFrequency();
-    std::cout << "==================It took " << durationTime << " ms to detect line features.==================" << std::endl<<std::endl;
+    std::cout << "==================It took " << durationTime << " ms to detect line features.==================\n";
 
     if(writeLSDImg){
         cv::Mat drawImage = grayImage;
@@ -98,10 +98,12 @@ std::vector<cv::Vec2f> runwayLineDetector(
         for (auto l:filteredLines) {
             cv::line(drawImage, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(0, 255, 0), 3, cv::LINE_AA);
         }
-        cv::imwrite("../filteredImage.jpg", drawImage);
+        cv::imwrite("./filteredImage.jpg", drawImage);
     }
 
     //=====================================================
+    // 4 use hough transform to detect runway
+
     std::vector<cv::Vec2f> result;
 
     //=====================================================
