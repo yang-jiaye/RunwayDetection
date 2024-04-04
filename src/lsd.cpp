@@ -26,7 +26,11 @@ cv::Vec3f getRhoThetaLength(cv::Vec4f line)
     return rhoThetaLength;
 }
 
-std::vector<cv::Vec2f> runwayLineDetector(cv::Mat bgrImage)
+std::vector<cv::Vec2f> runwayLineDetector(
+                                            cv::Mat bgrImage, 
+                                            bool writeLSDImg, //write LSD results
+                                            bool writeFilteredImg//write filtered results
+                                         )
 {
     //=====================================================
     // 1. preprocess image
@@ -49,11 +53,13 @@ std::vector<cv::Vec2f> runwayLineDetector(cv::Mat bgrImage)
 
     double endTime = double(cv::getTickCount());
     double durationTime = (endTime - startTime) * 1000 / cv::getTickFrequency();
-    std::cout << "==================It took " << durationTime << " ms to detect line features.==================" << std::endl<<std::endl;
+    std::cout << "==================It took " << durationTime << " ms to detect line features.==================\n";
 
-    cv::Mat drawImage = grayImage;
-    lsd->drawSegments(drawImage, lines);
-    cv::imwrite("../originalImage.jpg", drawImage);
+    if(writeLSDImg){
+        cv::Mat drawImage = grayImage;
+        lsd->drawSegments(drawImage, lines);
+        cv::imwrite("./originalImage.jpg", drawImage);
+    }
 
     /*
     the most difficult part is to find specific 3 lines from 
@@ -68,16 +74,13 @@ std::vector<cv::Vec2f> runwayLineDetector(cv::Mat bgrImage)
     //=====================================================
     // 3 filter out lines and group them
 
-    // in filteredLines, each Vec3f storage rho theta and length of a line
-    std::vector<cv::Vec3f> filteredLines;
-    std::vector<cv::Vec4f> filtered4FLines = lines;
-    filtered4FLines.clear();
+    // in filteredLines, each Vec4f storage coords of a line
+    std::vector<cv::Vec4f> filteredLines;
     std::vector<cv::Vec4f>::iterator lineIter; // iterate throughout lines_std
     float rho, theta, length;
     double lengthThreshold = 10; //length threshold
     double angleThreshold = PI/4; //angle threshold
     for(lineIter = lines.begin(); lineIter != lines.end(); ++lineIter){
-        // filtered4FLines.push_back(*lineIter);
         cv::Vec3f rtl = getRhoThetaLength(*lineIter);
         theta = rtl[1];
         length = rtl[2];
@@ -85,85 +88,23 @@ std::vector<cv::Vec2f> runwayLineDetector(cv::Mat bgrImage)
             length > lengthThreshold 
             && abs(theta) > angleThreshold
         ){
-            filteredLines.push_back(rtl);
-            filtered4FLines.push_back(*lineIter);
+            filteredLines.push_back(*lineIter);
         }
     }
     
-    drawImage = grayImage;
-    cv::cvtColor(drawImage, drawImage, cv::COLOR_BGR2RGB);
-    for (auto l:filtered4FLines) {
-        cv::line(drawImage, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(0, 255, 0), 3, cv::LINE_AA);
-    }
-
-    std::cout<<filteredLines.size()<<filtered4FLines.size()<<std::endl;
-    cv::imwrite("../filteredImage.jpg", drawImage);
-
-    //=====================================================
-    // 4 accumulate total length in each bin
-
-    int nBins = 20; // 20 bins
-    double intervalBins = PI/nBins;
-    std::vector<std::vector<cv::Vec3f>> bins(nBins); // nBins interval, each interval storage several Vec3f inside
-    std::vector<double> binLengthSums(nBins, 0.0); // total length in each bin
-    std::vector<cv::Vec3f>::iterator rtlIter;
-    for(rtlIter = filteredLines.begin(); rtlIter != filteredLines.end(); ++rtlIter){
-        int index = static_cast<int>( ( (*rtlIter)[1] + PI/2 ) / intervalBins );
-        if(index >= 0 && index < nBins){
-            bins[index].push_back(*rtlIter);
-            binLengthSums[index] += (*rtlIter)[2];
+    if(writeFilteredImg){
+        cv::Mat drawImage = grayImage;
+        cv::cvtColor(drawImage, drawImage, cv::COLOR_BGR2RGB);
+        for (auto l:filteredLines) {
+            cv::line(drawImage, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(0, 255, 0), 3, cv::LINE_AA);
         }
+        cv::imwrite("./filteredImage.jpg", drawImage);
     }
 
     //=====================================================
-    // 5 sort the total length of each bin
-
-    std::vector<NumberIndex> numbersWithIndex;
-
-    // 输出每个 bin 中的 length 总和
-    for (int i = 0; i < nBins; ++i) {
-        std::cout << "Bin " << i << " total length: " << binLengthSums[i] << std::endl;
-    }
-
-    // 将数组转化为结构体向量
-    for (int i = 0; i < binLengthSums.size(); ++i) {
-        numbersWithIndex.push_back({binLengthSums[i], i});
-    }
-
-    // 对结构体向量按照数字大小进行排序
-    std::sort(numbersWithIndex.begin(), numbersWithIndex.end(),
-              [](const NumberIndex& a, const NumberIndex& b) {
-                  return a.number > b.number;
-              });
-
-    int index[2];
-    index[0] = numbersWithIndex[0].index;
-    index[1] = numbersWithIndex[1].index;
-    
-    //=====================================================
-    // 6. get mean theta and rho of 2 bins
-    // To do: use K means to get the principle cluster in the bins
+    // 4 use hough transform to detect runway
 
     std::vector<cv::Vec2f> result;
-    
-    for(auto ind: index){
-        // std::cout<<"size" <<ind<<std::endl;
-        double sum = 0;
-        for(const auto& vec: bins[ind]){
-            sum += vec[0];
-        }
-        float meanRho = sum/static_cast<float>(bins[ind].size());
-        sum = 0;
-        for(const auto& vec: bins[ind]){
-            sum += vec[1];
-        }
-        float meanTheta = sum/static_cast<float>(bins[ind].size());
-        if(meanTheta < 0){
-            meanRho = -meanRho;
-        }
-        cv::Vec2f res(meanRho, meanTheta);
-        result.push_back(res);
-    }
 
     //=====================================================
     // 7 detect bottom line

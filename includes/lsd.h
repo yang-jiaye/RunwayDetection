@@ -13,4 +13,4 @@ runway line detection function
         First 2 lines are slant runway lines
         The third line is the bottom line
 */
-std::vector<cv::Vec2f> runwayLineDetector(cv::Mat img);
+std::vector<cv::Vec2f> runwayLineDetector(cv::Mat, bool writeLSDImg = false, bool writeFilteredImg = false);

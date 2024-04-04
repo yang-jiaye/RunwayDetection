@@ -1,11 +1,11 @@
-#include "includes/lsd.h"
+#include "lsd.h"
 
 int main()
 {
-    std::string path = "../demo.jpg";
+    std::string path = "../images/2.png";
     cv::Mat img = cv::imread(path);
 
-    std::vector<cv::Vec2f> lines = runwayLineDetector(img);
+    std::vector<cv::Vec2f> lines = runwayLineDetector(img, true, true);
 
     for(auto line: lines){
         float d = line[0];
@@ -20,7 +20,7 @@ int main()
         cv::line(img, cv::Point(x1, y1), cv::Point(x2, y2), cv::Scalar(0, 255, 0), 20);
     }
 
-    cv::imwrite("../output.jpg", img);
+    cv::imwrite("./output.jpg", img);
     // cv::namedWindow("Image", cv::WINDOW_NORMAL);
     // cv::imshow("Image", img);
     // cv::resizeWindow("Image", 800, 600);
