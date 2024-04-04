@@ -3,8 +3,8 @@
 #include <Eigen/Dense>
 
 const double PI = 3.1415926535897932;
-typedef cv::Vec3f HoughCoord;
-typedef std::vector<cv::Vec3f> HoughCoordVec;
+typedef cv::Vec3d HoughCoord;
+typedef std::vector<cv::Vec3d> HoughCoordVec;
 typedef std::vector<cv::Vec4f> LineVec;
 typedef std::vector<std::vector<LineVec>> LineGrid;
 

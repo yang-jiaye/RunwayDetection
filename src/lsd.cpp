@@ -48,9 +48,9 @@ std::vector<cv::Vec2f> runwayLineDetector(cv::Mat bgrImage, bool writeImage)
     // in filteredLines, each Vec4f storage coords of a line
     std::vector<cv::Vec4f> filteredLines;
     std::vector<cv::Vec4f>::iterator lineIter; // iterate throughout lines_std
-    float rho, theta, length;
-    float lengthThreshold = 10; //length threshold
-    float angleThreshold = PI/4; //angle threshold
+    double rho, theta, length;
+    double lengthThreshold = 10; //length threshold
+    double angleThreshold = PI/4; //angle threshold
     for(lineIter = lsdLines.begin(); lineIter != lsdLines.end(); ++lineIter)
     {
         //rho theta length
@@ -88,16 +88,16 @@ std::vector<cv::Vec2f> houghTransform(cv::Mat bgrImage, std::vector<cv::Vec4f> l
 {
     int NRho = 50;
     int NTheta = 50;
-    float maxRho = sqrt(bgrImage.cols * bgrImage.cols + bgrImage.rows * bgrImage.rows);
-    float maxTheta = PI/2;
+    double maxRho = sqrt(bgrImage.cols * bgrImage.cols + bgrImage.rows * bgrImage.rows);
+    double maxTheta = PI/2;
 
     // Define evenly spaced values from 0 to max for theta bins
-    std::vector<float> theta_bins(NTheta);
+    std::vector<double> theta_bins(NTheta);
     for (int i = 0; i < NTheta; ++i) {
         theta_bins[i] = i * PI / (NTheta - 1) - PI / 2;
     }
     // Define evenly spaced values from 0 to max for rho bins
-    std::vector<float> rho_bins(NRho);
+    std::vector<double> rho_bins(NRho);
     for (int i = 0; i < NRho; ++i) {
         rho_bins[i] = i * maxRho / (NRho - 1);
     }
@@ -110,9 +110,17 @@ std::vector<cv::Vec2f> houghTransform(cv::Mat bgrImage, std::vector<cv::Vec4f> l
     {
         //convert coord
         HoughCoord houghCoord = cartesianToHough(line);
+        // std::cout<<houghCoord<<std::endl;
         //find corresbonding grid
         int rho_idx = std::distance(rho_bins.begin(), std::upper_bound(rho_bins.begin(), rho_bins.end(), houghCoord[0])) - 1;
         int theta_idx = std::distance(theta_bins.begin(), std::upper_bound(theta_bins.begin(), theta_bins.end(), houghCoord[1])) - 1;
+        if(theta_idx >= NTheta-1){
+            theta_idx = NTheta-2;
+        }
+        if(theta_idx < 0){
+            theta_idx = 0;
+        }
+        // std::cout<<rho_idx<<" "<<theta_idx<<std::endl;
         //accumulator increase
         Accumulator(rho_idx, theta_idx) += houghCoord[2];
         //storage houghCoord
@@ -126,7 +134,7 @@ std::vector<cv::Vec2f> houghTransform(cv::Mat bgrImage, std::vector<cv::Vec4f> l
     {
         Eigen::Index max_row, max_col;
         // std::cout<<"=================find max value================\n";
-        float max_value = Accumulator.maxCoeff(&max_row, &max_col);
+        double max_value = Accumulator.maxCoeff(&max_row, &max_col);
         Accumulator(max_row, max_col) = -INFINITY;
         LineVec lineVec = lineGrid[max_row][max_col];
         results.push_back(computeResults(lineVec));
@@ -237,17 +245,17 @@ HoughCoord cartesianToHough(cv::Vec4f line)
     float y1 = line[1];
     float x2 = line[2];
     float y2 = line[3];
-    float theta = 0;
+    double theta = 0;
     if(x1 == x2){
         theta = PI/2;
     }
     double k = (y1 - y2) / (x1 - x2);
     theta = std::atan(k);
-    float A = y2 - y1;
-    float B = x2 - x1;
-    float C = x2*y1 - x1*y2;
-    float length = sqrt(A*A + B*B);
-    float rho = abs(C) / length;
+    double A = y2 - y1;
+    double B = x2 - x1;
+    double C = x2*y1 - x1*y2;
+    double length = sqrt(A*A + B*B);
+    double rho = abs(C) / length;
     cv::Vec3f rhoThetaLength(rho, theta, length);
     return rhoThetaLength;
 }

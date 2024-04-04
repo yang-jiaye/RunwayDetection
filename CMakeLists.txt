@@ -13,14 +13,23 @@ endif()
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
-add_executable(main src/main.cpp src/lsd.cpp)
+# 编译lsd.cpp成一个库
+add_library(lsd src/lsd.cpp)
 
+# 链接OpenCV库到lsd_lib
+target_link_libraries(lsd ${OpenCV_LIBS})
+
+link_libraries(lsd)
+
+# 创建可执行目标main并链接lsd_lib
+add_executable(main src/main.cpp)
+
+# 创建可执行目标animation并链接lsd_lib
+add_executable(animation src/animation.cpp)
+
+# 包含所需的头文件目录
 include_directories(
-	${PROJECT_SOURCE_DIR}/includes
-	${OpenCV_INCLUDE_DIRS}
-	${EIGEN3_INCLUDE_DIR}
-)
-
-target_link_libraries(main
-	${OpenCV_LIBS}
+    ${PROJECT_SOURCE_DIR}/includes
+    ${OpenCV_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIR}
 )

@@ -2,7 +2,7 @@
 
 int main()
 {
-    std::string path = "../images/2.png";
+    std::string path = "../data/EuRoc_FAIM_20240401/cam0/data_rgb/1711643354826267648.png";
     cv::Mat img = cv::imread(path);
 
     std::vector<cv::Vec2f> lines = runwayLineDetector(img, true);
@@ -21,9 +21,5 @@ int main()
     }
 
     cv::imwrite("./output.jpg", img);
-    // cv::namedWindow("Image", cv::WINDOW_NORMAL);
-    // cv::imshow("Image", img);
-    // cv::resizeWindow("Image", 800, 600);
-    // cv::waitKey(0);
     return 0;
 }
