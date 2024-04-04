@@ -10,13 +10,13 @@ if(NOT OpenCV_FOUND)
     message(FATAL_ERROR "OpenCV >= 4.6 not found. LSD depends on it")
 endif()
 
-add_executable(demo main.cpp lsd.cpp)
+add_executable(main src/main.cpp src/lsd.cpp)
 
 include_directories(
-	${PROJECT_SOURCE_DIR}
+	${PROJECT_SOURCE_DIR}/includes
 	${OpenCV_INCLUDE_DIRS}
 )
 
-target_link_libraries(demo
+target_link_libraries(main
 	${OpenCV_LIBS}
 )
