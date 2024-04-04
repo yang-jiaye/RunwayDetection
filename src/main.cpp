@@ -5,18 +5,18 @@ int main()
     std::string path = "../images/2.png";
     cv::Mat img = cv::imread(path);
 
-    std::vector<cv::Vec2f> lines = runwayLineDetector(img, true, true);
+    std::vector<cv::Vec2f> lines = runwayLineDetector(img, true);
 
     for(auto line: lines){
-        float d = line[0];
+        float rho = line[0];
         float theta = line[1];
-        std::cout<<d<<" "<<theta<<std::endl;
-        float x0 = d * std::sin(theta);
-        float y0 = -d * std::cos(theta);
-        float x1 = static_cast<int>(x0 + 4000 * (std::cos(theta)));
-        float y1 = static_cast<int>(y0 + 4000 * (std::sin(theta)));
-        float x2 = static_cast<int>(x0 - 1000 * (std::cos(theta)));
-        float y2 = static_cast<int>(y0 - 1000 * (std::sin(theta)));
+        std::cout<<rho<<" "<<theta<<std::endl;
+        float x0 = rho * std::cos(theta);
+        float y0 = rho * std::sin(theta);
+        float x1 = static_cast<int>(x0 + 2000 * (std::sin(theta)));
+        float y1 = static_cast<int>(y0 - 2000 * (std::cos(theta)));
+        float x2 = static_cast<int>(x0 - 2000 * (std::sin(theta)));
+        float y2 = static_cast<int>(y0 + 2000 * (std::cos(theta)));
         cv::line(img, cv::Point(x1, y1), cv::Point(x2, y2), cv::Scalar(0, 255, 0), 20);
     }
 

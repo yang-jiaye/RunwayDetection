@@ -10,11 +10,15 @@ if(NOT OpenCV_FOUND)
     message(FATAL_ERROR "OpenCV >= 4.6 not found. LSD depends on it")
 endif()
 
+find_package(Eigen3 REQUIRED)
+include_directories(${EIGEN3_INCLUDE_DIR})
+
 add_executable(main src/main.cpp src/lsd.cpp)
 
 include_directories(
 	${PROJECT_SOURCE_DIR}/includes
 	${OpenCV_INCLUDE_DIRS}
+	${EIGEN3_INCLUDE_DIR}
 )
 
 target_link_libraries(main
