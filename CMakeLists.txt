@@ -33,3 +33,6 @@ include_directories(
     ${OpenCV_INCLUDE_DIRS}
     ${EIGEN3_INCLUDE_DIR}
 )
+
+add_custom_command(OUTPUT clean_png COMMAND rm -f ./*.png)
+add_custom_target(clean_png DEPENDS clean_png)

@@ -1,6 +1,8 @@
 #include <opencv2/opencv.hpp>
 #include <algorithm>
+#include <numeric>
 #include <Eigen/Dense>
+// #include <math.h>
 
 const double PI = 3.1415926535897932;
 typedef cv::Vec3d HoughCoord;
@@ -20,8 +22,17 @@ runway line detection function
         First 2 lines are slant runway lines
         The third line is the bottom line
 */
-std::vector<cv::Vec2f> runwayLineDetector(cv::Mat, bool writeImage = false);
+// detect 2 slant lines
+std::vector<cv::Vec2f> detectRunwayLine(cv::Mat, bool writeImage = false);
 std::vector<cv::Vec2f> houghTransform(cv::Mat bgrImage, std::vector<cv::Vec4f> lines, bool writeImage);
 std::vector<cv::Vec2f> houghTransformM(cv::Mat bgrImage, cv::Mat mask, bool writeImage = false);
-HoughCoord cartesianToHough(cv::Vec4f line);
-cv::Vec2f computeResults(LineVec lineVec);
+
+// detect threshold
+std::vector<cv::RotatedRect> detectRunwayThreshold(cv::Mat bgrImage, std::vector<cv::Vec2f> lines, bool writeImage = false);
+std::vector<cv::RotatedRect> filterThresholds(std::vector<cv::RotatedRect> threshs, std::vector<cv::Vec2f> lines);
+
+//detect bottom and upper lines
+std::vector<cv::Vec2f> detectBottomAndUpperLines(const std::vector<cv::RotatedRect>& threshs);
+
+//detect slope line
+std::vector<cv::Vec2f> detectSlopeLine(std::vector<cv::Vec2f>BULines, std::vector<cv::Vec2f> LRLines);

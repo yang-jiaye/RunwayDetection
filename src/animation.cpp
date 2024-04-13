@@ -14,7 +14,7 @@ void playAnimation(const std::string& folderPath, int interval) {
         std::cout<<"===============show image"<<imageFile<<std::endl;
         cv::Mat image = cv::imread(imageFile);
 
-        std::vector<cv::Vec2f> lines = runwayLineDetector(image, true);
+        std::vector<cv::Vec2f> lines = detectRunwayLine(image, true);
 
         for(auto line: lines){
             float rho = line[0];
