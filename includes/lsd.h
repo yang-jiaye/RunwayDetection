@@ -28,8 +28,8 @@ std::vector<cv::Vec2f> houghTransform(cv::Mat bgrImage, std::vector<cv::Vec4f> l
 std::vector<cv::Vec2f> houghTransformM(cv::Mat bgrImage, cv::Mat mask, bool writeImage = false);
 
 // detect threshold
-std::vector<cv::RotatedRect> detectRunwayThreshold(cv::Mat bgrImage, std::vector<cv::Vec2f> lines, bool writeImage = false);
-std::vector<cv::RotatedRect> filterThresholds(std::vector<cv::RotatedRect> threshs, std::vector<cv::Vec2f> lines);
+std::vector<cv::RotatedRect> detectRunwayThreshold(cv::Mat bgrImage, std::vector<cv::Vec2f> lines, bool writeImage = false, bool if_debug = false);
+std::vector<cv::RotatedRect> filterThresholds(std::vector<cv::RotatedRect> threshs, std::vector<cv::Vec2f> lines, bool writeImage = false, cv::Mat runway_line_detect = cv::Mat(), bool if_debug = false);
 
 //detect bottom and upper lines
 std::vector<cv::Vec2f> detectBottomAndUpperLines(const std::vector<cv::RotatedRect>& threshs);

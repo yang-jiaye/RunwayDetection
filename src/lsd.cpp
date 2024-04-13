@@ -23,7 +23,7 @@ HoughCoord cartesianToHough(cv::Vec4f line)
 
 cv::Vec2f computeResults(LineVec lineVec){
     cv::Vec2f result;
-    // std::cout<<"=================begin compute results==============\n";
+    // [computeResults]:    begin compute results
 
     std::vector<cv::Vec2f> points;
     std::vector<double> weights;
@@ -87,7 +87,7 @@ cv::Vec2f computeIntersection(cv::Vec2f line1, cv::Vec2f line2) {
 
 // Define the function LeastSquareRegression
 cv::Vec2f LeastSquareRegression(const std::vector<cv::Vec2f>& points) {
-    // Implementation of the function
+    // [LeastSquareRegression]:    Implementation of the function
     // Constructing matrices A and b for the least squares problem Ax = b
     Eigen::MatrixXd A(points.size(), 2);
     Eigen::VectorXd b(points.size());
@@ -140,7 +140,7 @@ std::vector<cv::Vec2f> detectRunwayLine(cv::Mat bgrImage, bool writeImage)
 
     double endTime = double(cv::getTickCount());
     double durationTime = (endTime - startTime) * 1000 / cv::getTickFrequency();
-    std::cout << "==================It took " << durationTime << " ms to detect line features.==================\n";
+    std::cout << "[detectRunwayLine]:    It took " << durationTime << " ms to detect line features." << std::endl;
 
     if(writeImage)
     {
@@ -227,7 +227,7 @@ std::vector<cv::Vec2f> houghTransform(cv::Mat bgrImage, std::vector<cv::Vec4f> l
     {
         //convert coord
         HoughCoord houghCoord = cartesianToHough(line);
-        // std::cout<<houghCoord<<std::endl;
+        // [houghTransform]:    houghCoord
         //find corresbonding grid
         int rho_idx = std::distance(rho_bins.begin(), std::upper_bound(rho_bins.begin(), rho_bins.end(), houghCoord[0])) - 1;
         int theta_idx = std::distance(theta_bins.begin(), std::upper_bound(theta_bins.begin(), theta_bins.end(), houghCoord[1])) - 1;
@@ -237,7 +237,7 @@ std::vector<cv::Vec2f> houghTransform(cv::Mat bgrImage, std::vector<cv::Vec4f> l
         if(theta_idx < 0){
             theta_idx = 0;
         }
-        // std::cout<<rho_idx<<" "<<theta_idx<<std::endl;
+        // [houghTransform]:    rho_idx theta_idx
         //accumulator increase
         Accumulator(rho_idx, theta_idx) += houghCoord[2];
         //storage houghCoord
@@ -250,11 +250,14 @@ std::vector<cv::Vec2f> houghTransform(cv::Mat bgrImage, std::vector<cv::Vec4f> l
     for(int i = 0; i<line_num; i++)
     {
         Eigen::Index max_row, max_col;
-        // std::cout<<"=================find max value================\n";
+        // [houghTransform]:    find max value
         double max_value = Accumulator.maxCoeff(&max_row, &max_col);
         Accumulator(max_row, max_col) = -INFINITY;
         LineVec lineVec = lineGrid[max_row][max_col];
         results.push_back(computeResults(lineVec));
+    }
+    if(results[1][1] > results[0][1]){
+        std::swap(results[0], results[1]);
     }
 
     return results;
@@ -271,7 +274,7 @@ std::vector<cv::Vec2f> houghTransformM(cv::Mat bgrImage, cv::Mat mask, bool writ
         for (auto line = houghLines.begin(); line != houghLines.begin() + 10; ++line) {
             float rho = (*line)[0];
             float theta = (*line)[1];
-            std::cout<<rho<<" "<<theta<<std::endl;
+            // [houghTransformM]:    rho theta
             float x0 = rho * std::cos(theta);
             float y0 = rho * std::sin(theta);
             float x1 = static_cast<int>(x0 + 2000 * (std::sin(theta)));
@@ -304,7 +307,7 @@ std::vector<cv::Vec2f> houghTransformM(cv::Mat bgrImage, cv::Mat mask, bool writ
     return results;
 }
 
-std::vector<cv::RotatedRect> detectRunwayThreshold(cv::Mat bgrImage, std::vector<cv::Vec2f> lines, bool writeImage)
+std::vector<cv::RotatedRect> detectRunwayThreshold(cv::Mat bgrImage, std::vector<cv::Vec2f> lines, bool writeImage, bool if_debug)
 {
     // Convert the image to grayscale
     cv::Mat gray;
@@ -346,7 +349,7 @@ std::vector<cv::RotatedRect> detectRunwayThreshold(cv::Mat bgrImage, std::vector
             rect.points(vertices);
             for (int i = 0; i < 4; i++){
                 cv::line(threshs_image, vertices[i], vertices[(i+1)%4], cv::Scalar(0, 255, 255));
-                cv::line(centroids_image, vertices[i], vertices[(i+1)%4], cv::Scalar(255, 255, 255));
+                cv::line(centroids_image, vertices[i], vertices[(i+1)%4], cv::Scalar(255, 0, 255));
             }
 
             // Calculate the centroid of the rectangle
@@ -362,7 +365,8 @@ std::vector<cv::RotatedRect> detectRunwayThreshold(cv::Mat bgrImage, std::vector
         cv::imwrite("centroids.png", centroids_image);
     }
 
-    threshs = filterThresholds(threshs, lines);
+    std::cout << "[detectRunwayThreshold]:    filtering threshs\n";
+    threshs = filterThresholds(threshs, lines, writeImage, bgrImage.clone(), if_debug);
 
     // draw threshs
     if(writeImage){
@@ -381,12 +385,18 @@ std::vector<cv::RotatedRect> detectRunwayThreshold(cv::Mat bgrImage, std::vector
 }
 
 // Filter out the rectangles by aspect ratios, rotated angles, position of center points and verticle scan
-std::vector<cv::RotatedRect> filterThresholds(std::vector<cv::RotatedRect> threshs, std::vector<cv::Vec2f> lines)
+std::vector<cv::RotatedRect> filterThresholds(std::vector<cv::RotatedRect> threshs, std::vector<cv::Vec2f> lines, bool writeImage, cv::Mat runway_line_detect, bool if_debug)
 {
     std::vector<cv::RotatedRect> filtered_threshs;
     std::vector<float> min_y;
     std::vector<float> max_y;
     std::vector<float> center_y;
+
+    if(if_debug)
+        std::cout<<"[filterThresholds]:     number of threshs before filter: "<<threshs.size()<<std::endl;
+
+    if(if_debug)
+        std::cout<<"[filterThresholds]:     check each thresh\n";
 
     for (const auto& thresh : threshs) {
         // Set flag to true
@@ -400,6 +410,10 @@ std::vector<cv::RotatedRect> filterThresholds(std::vector<cv::RotatedRect> thres
         if (aspect_ratio < 2) {
             is_thresh = false;
         }
+
+        if(if_debug)
+            std::cout<<"aspect ratio filter ";
+            std::cout<< is_thresh<<" "<<aspect_ratio<<" " <<height<<" "<<width<<std::endl;
 
         // 2. Check if the angle is close to the angle of any of the runway lines
 
@@ -427,9 +441,11 @@ std::vector<cv::RotatedRect> filterThresholds(std::vector<cv::RotatedRect> thres
 
         if (angle < min_angle || angle > max_angle) {
             is_thresh = false;
-            // std::cout<<"=================angle filter================\n";
-            // std::cout<<angle<<" "<<min_angle<<" "<<max_angle<<std::endl;
         }
+
+        if(if_debug)
+            std::cout<<"angle filter ";
+            std::cout<< is_thresh<<" "<<min_angle<<" "<<angle<<" " <<max_angle<<std::endl;
 
         // 3. check the center of the rectangle inside 2 lines
         cv::Point2f center = thresh.center;
@@ -443,9 +459,12 @@ std::vector<cv::RotatedRect> filterThresholds(std::vector<cv::RotatedRect> thres
         float x_R = (rho_R - center.y * std::sin(theta_R)) / std::cos(theta_R);
         if (center.x < x_L || center.x > x_R) {
             is_thresh = false;
-            // std::cout<<"=================center filter================\n";
-            // std::cout<<center.x<<" "<<x_L<<" "<<x_R<<std::endl;
         }
+
+        if(if_debug)
+            std::cout<<"center filter ";
+            std::cout<<is_thresh<<" "<<x_L<<" "<<center.x<<" "<<x_R<<std::endl;
+            std::cout<<rho_L<<" "<<theta_L<<" "<<rho_R<<" "<<theta_R<<std::endl;
 
         // If the rectangle is parallel to the runway lines, keep it
         if (is_thresh) {
@@ -464,7 +483,22 @@ std::vector<cv::RotatedRect> filterThresholds(std::vector<cv::RotatedRect> thres
         }
     }
 
+    if(if_debug)
+        std::cout<<"[filterThresholds]:     number of threshs after filter: "<<filtered_threshs.size()<<std::endl;
+    if(writeImage){
+        for(auto thresh: filtered_threshs){
+            cv::Point2f vertices[4];
+            thresh.points(vertices);
+            for(int i = 0; i < 4; i++){
+                cv::line(runway_line_detect, vertices[i], vertices[(i+1)%4], cv::Scalar(0, 255, 255), 2);
+            }
+        }
+        cv::imwrite("filtered_threshs3.png", runway_line_detect);
+    }
+
     // 4 check each y = center.y in center_y, find the number of rects that min_y < y < max_y, and find the center.y of max number
+    if(if_debug)
+        std::cout<<"[filterThresholds]:     center filter\n";
     int max_count = 0;
     float max_center_y = 0;
     for (int i = 0; i < center_y.size(); i++) {
@@ -493,7 +527,17 @@ std::vector<cv::RotatedRect> filterThresholds(std::vector<cv::RotatedRect> thres
     }
 
     // 5. check the area of threshs
+    
+    if(if_debug)
+        std::cout<<"[filterThresholds]:     area filter\n";
+
     std::vector<float> areas;
+    // std::cout<<filtered_threshs2.size()<<std::endl;
+    if(filtered_threshs2.size() == 0){
+        std::cout<<"[filterThresholds]:     no threshs\n";
+        return filtered_threshs2;
+    }
+
     for (const auto& thresh : filtered_threshs2) {
         areas.push_back(thresh.size.area());
     }
@@ -501,7 +545,7 @@ std::vector<cv::RotatedRect> filterThresholds(std::vector<cv::RotatedRect> thres
     std::sort(areas.begin(), areas.end());
     float median_area = areas[areas.size() / 2];
     for(auto iter = filtered_threshs2.begin(); iter != filtered_threshs2.end();){
-        if(iter->size.area() < median_area/2 || iter->size.area() > median_area*2){
+        if(iter->size.area() < median_area*0.7 || iter->size.area() > median_area*1.4){
             // std::cout<<"=================area filter================\n";
             // std::cout<<median_area<<" "<<iter->size.area() <<std::endl;
             iter = filtered_threshs2.erase(iter);
@@ -510,6 +554,7 @@ std::vector<cv::RotatedRect> filterThresholds(std::vector<cv::RotatedRect> thres
         }
     }
 
+    // std::cout<<"=================return threshs================\n";
     return filtered_threshs2;
 }
 
