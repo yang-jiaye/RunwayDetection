@@ -1,3 +1,6 @@
+#ifndef LSD_H
+#define LSD_H
+
 #include <opencv2/opencv.hpp>
 #include <algorithm>
 #include <numeric>
@@ -36,3 +39,5 @@ std::vector<cv::Vec2f> detectBottomAndUpperLines(const std::vector<cv::RotatedRe
 
 //detect slope line
 std::vector<cv::Vec2f> detectSlopeLine(std::vector<cv::Vec2f>BULines, std::vector<cv::Vec2f> LRLines);
+
+#endif // LSD_H
