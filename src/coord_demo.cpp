@@ -5,7 +5,10 @@ int main()
     auto threshs = get_thresholds_coords();
     for(auto thresh:threshs)
     {
-        std::cout<<thresh<<std::endl;
+        for(auto point:thresh)
+        {
+            std::cout<<point<<std::endl;
+        }
     }
     return 0;
 }

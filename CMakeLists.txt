@@ -27,12 +27,11 @@ add_executable(main src/main.cpp)
 # 创建可执行目标animation并链接lsd_lib
 add_executable(animation src/animation.cpp)
 
+add_executable(coord_demo src/coord_demo.cpp)
+
 # 包含所需的头文件目录
 include_directories(
     ${PROJECT_SOURCE_DIR}/includes
     ${OpenCV_INCLUDE_DIRS}
     ${EIGEN3_INCLUDE_DIR}
 )
-
-add_custom_command(OUTPUT clean_png COMMAND rm -f ./*.png)
-add_custom_target(clean_png DEPENDS clean_png)
