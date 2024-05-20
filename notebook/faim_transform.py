@@ -70,6 +70,10 @@ def main():
     R_tmp = np.array([[0, -1, 0],
                       [1, 0, 0],
                       [0, 0, 1]])
+    
+    # ned in airsim is in fact esd, the ned above is real ned.
+    # so if want to convert coord in sim data (esd) to runway frame,
+    # esd2ned should be done first
     R = R @ R_tmp
     print("R:", R)
     print("t:", t)
