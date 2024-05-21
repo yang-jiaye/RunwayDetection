@@ -71,20 +71,34 @@ def main():
                       [1, 0, 0],
                       [0, 0, 1]])
     
-    # ned in airsim is in fact esd, the ned above is real ned.
+    # ned in airsim is in fact esd, the ned above is real ned
+    # R is rotation from real ned2runway
     # so if want to convert coord in sim data (esd) to runway frame,
     # esd2ned should be done first
-    R = R @ R_tmp
     print("R:", R)
     print("t:", t)
+    # R: [[ 2.15910238e-01  9.76413205e-01  1.47930357e-04]
+    # [-9.76413216e-01  2.15910241e-01 -4.88034099e-07]
+    # [-3.24162020e-05 -1.44335784e-04  9.99999989e-01]]
+    # t: [ 7.08167518e-01 -4.72509669e-02 -2.43538484e-05]
+
     # rot = st.Rotation.from_matrix(R)
     # print("\nrot:", rot.as_euler('xyz', degrees=True))
 
+    # esd 2 runway
+    R_2 = R @ R_tmp
     print("============test===========")
+    # "ned" frame in fact esd frame
     a = np.array([-50.3129005,	-1.97795E-07,	-49.64810562]).T
+    # runway frame
     b = np.array([-4.9126205213715100000E+01,	-1.0870414985923800000E+01,	-4.9646474121268200000E+01]).T
-    print(R @ a + t)
+    print(R_2 @ a + t)
     print(b)
+
+    print("============runway 2 ned===========")
+    print(R.T @ (b - t))
+    print(a)
+
 
 if __name__ == "__main__":
     main()
