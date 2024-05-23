@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(lsd_demo)
+project(runway_detection)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 add_definitions(-DCOMPILEDWITHC11)
@@ -14,7 +14,7 @@ find_package(Eigen3 REQUIRED)
 
 # 包含所需的头文件目录
 include_directories(
-    ${PROJECT_SOURCE_DIR}/includes
+    ${PROJECT_SOURCE_DIR}/include
     ${OpenCV_INCLUDE_DIRS}
     ${EIGEN3_INCLUDE_DIR}
 )
@@ -25,6 +25,6 @@ target_link_libraries(feature_detection ${OpenCV_LIBS})
 
 link_libraries(feature_detection)
 
-add_executable(main src/main.cpp)
+add_executable(demo src/demo.cpp)
 
 add_executable(visualization src/visualization.cpp)
