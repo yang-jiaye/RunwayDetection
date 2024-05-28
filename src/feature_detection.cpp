@@ -1,3 +1,14 @@
+/**
+ * @file feature_detection.cpp
+ * @author Yang jiaye (yjy420@sjtu.edu.cn)
+ * @brief feature detection
+ * @version 0.1
+ * @date 2024-05-28
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
+
 #include "feature_detection.h"
 
 typedef FeatureDetector::HoughCoord HoughCoord;
@@ -165,7 +176,7 @@ std::vector<HoughCoord> FeatureDetector::detectRunwayLine(cv::Mat image, bool if
 
     double endTime = double(cv::getTickCount());
     double durationTime = (endTime - startTime) * 1000 / cv::getTickFrequency();
-    std::cout << "[detectRunwayLine]: It took " << durationTime << " ms to detect line features." << std::endl;
+    std::cout << "[detectRunwayLine]:\tIt took " << durationTime << " ms to detect line features." << std::endl;
 
     if(if_save)
     {
@@ -249,23 +260,23 @@ std::vector<cv::RotatedRect> FeatureDetector::detectThreshold(cv::Mat image, std
     }
 
     // Create an empty image for rotated rectangles and centroids
-    cv::Mat threshs_image = image.clone();
+    cv::Mat bars_image = image.clone();
     cv::Mat centroids_image = image.clone();
-    std::vector<cv::RotatedRect> threshs;
+    std::vector<cv::RotatedRect> bars;
 
     // Process each contour
     for (const auto& contour : contours) {
         
         // Get the rotated rectangle that best fits the contour
         cv::RotatedRect rect = cv::minAreaRect(contour);
-        threshs.push_back(rect);
+        bars.push_back(rect);
 
         if(if_save){
             // Draw the rotated rectangle in white
             cv::Point2f vertices[4];
             rect.points(vertices);
             for (int i = 0; i < 4; i++){
-                cv::line(threshs_image, vertices[i], vertices[(i+1)%4], cv::Scalar(0, 255, 255));
+                cv::line(bars_image, vertices[i], vertices[(i+1)%4], cv::Scalar(0, 255, 255));
                 cv::line(centroids_image, vertices[i], vertices[(i+1)%4], cv::Scalar(255, 0, 255));
             }
 
@@ -278,40 +289,40 @@ std::vector<cv::RotatedRect> FeatureDetector::detectThreshold(cv::Mat image, std
     }
 
     if(if_save){
-        cv::imwrite("threshs.png", threshs_image);
+        cv::imwrite("bars.png", bars_image);
         cv::imwrite("centroids.png", centroids_image);
     }
     if(if_debug){
-        std::cout << "[detectThreshold]:\tfiltering threshs\n";
+        std::cout << "[detectThreshold]:\tfiltering bars\n";
     }
     
-    threshs = filterThresholds(threshs, lines, if_save, image.clone(), if_debug);
+    bars = filterThresholdBars(bars, lines, if_save, image.clone(), if_debug);
 
-    // draw threshs
+    // draw bars
     if(if_save){
-        cv::Mat filtered_threshs_image = image.clone();
-        for (const auto& thresh : threshs) {
+        cv::Mat filtered_bars_image = image.clone();
+        for (const auto& thresh : bars) {
             cv::Point2f vertices[4];
             thresh.points(vertices);
             for (int i = 0; i < 4; i++){
-                cv::line(filtered_threshs_image, vertices[i], vertices[(i+1)%4], cv::Scalar(0, 255, 255));
+                cv::line(filtered_bars_image, vertices[i], vertices[(i+1)%4], cv::Scalar(0, 255, 255));
             }
         }
-        cv::imwrite("filtered_threshs.png", filtered_threshs_image);
+        cv::imwrite("filtered_bars.png", filtered_bars_image);
     }
 
-    return threshs;
+    return bars;
 }
 
 // Function to detect the bottom line and the upper line
-std::vector<HoughCoord> FeatureDetector::detectBottomUpperLines(const std::vector<cv::RotatedRect>& threshs)
+std::vector<HoughCoord> FeatureDetector::detectBottomUpperLines(const std::vector<cv::RotatedRect>& bars)
 {
     std::vector<cv::Vec2d> lower_points;
     std::vector<cv::Vec2d> upper_points;
 
-    for(auto thres : threshs){
+    for(auto bar : bars){
         cv::Point2f vertices[4];
-        thres.points(vertices);
+        bar.points(vertices);
         // sort vertices by y
         std::sort(vertices, vertices+4, [](cv::Point2f a, cv::Point2f b){
             return a.y < b.y;
@@ -417,19 +428,19 @@ std::vector<HoughCoord> FeatureDetector::filterLines(cv::Mat bgrImage, std::vect
 
 
 // Filter out the rectangles by aspect ratios, rotated angles, position of center points and verticle scan
-std::vector<cv::RotatedRect> FeatureDetector::filterThresholds(std::vector<cv::RotatedRect> threshs, std::vector<HoughCoord> lines, bool if_save, cv::Mat runway_line_detect, bool if_debug)
+std::vector<cv::RotatedRect> FeatureDetector::filterThresholdBars(std::vector<cv::RotatedRect> bars, std::vector<HoughCoord> lines, bool if_save, cv::Mat runway_line_detect, bool if_debug)
 {
-    std::vector<cv::RotatedRect> filtered_threshs1;
+    std::vector<cv::RotatedRect> filtered_bars1;
     std::vector<float> min_y;
     std::vector<float> max_y;
     std::vector<float> center_y;
 
     if(if_debug){
-        std::cout<<"[filterThresholds]:     number of threshs before filter: "<<threshs.size()<<std::endl;
+        std::cout<<"[filterThresholdBars]:     number of bars before filter: "<<bars.size()<<std::endl;
     }
         
     // check each threshold
-    for (const auto& thresh : threshs) {
+    for (const auto& thresh : bars) {
         // Set flag to true
         bool is_thresh = true;
 
@@ -503,7 +514,7 @@ std::vector<cv::RotatedRect> FeatureDetector::filterThresholds(std::vector<cv::R
            
         // If the rectangle is parallel to the runway lines, keep it
         if (is_thresh) {
-            filtered_threshs1.push_back(thresh);
+            filtered_bars1.push_back(thresh);
             
             std::vector<float> y_coords;
             for (const auto& vertex : vertices) {
@@ -518,23 +529,23 @@ std::vector<cv::RotatedRect> FeatureDetector::filterThresholds(std::vector<cv::R
         }
     }
     if(if_debug){
-        std::cout<<"[filterThresholds]:\tumber of threshs after filter: "<<filtered_threshs1.size()<<std::endl;
+        std::cout<<"[filterThresholdBars]:\tumber of bars after filter: "<<filtered_bars1.size()<<std::endl;
     }
         
     if(if_save){
-        for(auto thresh: filtered_threshs1){
+        for(auto thresh: filtered_bars1){
             cv::Point2f vertices[4];
             thresh.points(vertices);
             for(int i = 0; i < 4; i++){
                 cv::line(runway_line_detect, vertices[i], vertices[(i+1)%4], cv::Scalar(0, 255, 255), 2);
             }
         }
-        cv::imwrite("filtered_threshs1.png", runway_line_detect);
+        cv::imwrite("filtered_bars1.png", runway_line_detect);
     }
 
     // 4 check each y = center.y in center_y, find the number of rects that min_y < y < max_y, and find the center.y of max number
     if(if_debug){
-        std::cout<<"[filterThresholds]:\tcenter filter\n";
+        std::cout<<"[filterThresholdBars]:\tcenter filter\n";
     }
         
     int max_count = 0;
@@ -554,46 +565,46 @@ std::vector<cv::RotatedRect> FeatureDetector::filterThresholds(std::vector<cv::R
         }
     }
 
-    std::vector<cv::RotatedRect> filtered_threshs2;
+    std::vector<cv::RotatedRect> filtered_bars2;
 
     for (int i = 0; i < center_y.size(); i++) {
         // std::cout<<"=================center filter================\n";
         // std::cout<<min_y[i]<<" "<<max_center_y<<" "<<max_y[i]<<std::endl;
         if (min_y[i] < max_center_y && max_center_y < max_y[i]) {
-            filtered_threshs2.push_back(filtered_threshs1[i]);
+            filtered_bars2.push_back(filtered_bars1[i]);
         }
     }
 
-    // 5. check the area of threshs
+    // 5. check the area of bars
     
     if(if_debug){
-        std::cout<<"[filterThresholds]:\tarea filter\n";
+        std::cout<<"[filterThresholdBars]:\tarea filter\n";
     }
         
 
     std::vector<float> areas;
-    // std::cout<<filtered_threshs2.size()<<std::endl;
-    if(filtered_threshs2.size() == 0){
-        std::cout<<"[filterThresholds]:\tno threshs\n";
-        return filtered_threshs2;
+    // std::cout<<filtered_bars2.size()<<std::endl;
+    if(filtered_bars2.size() == 0){
+        std::cout<<"[filterThresholdBars]:\tno bars\n";
+        return filtered_bars2;
     }
 
-    for (const auto& thresh : filtered_threshs2) {
+    for (const auto& thresh : filtered_bars2) {
         areas.push_back(thresh.size.area());
     }
     // median area
     std::sort(areas.begin(), areas.end());
     float median_area = areas[areas.size() / 2];
-    for(auto iter = filtered_threshs2.begin(); iter != filtered_threshs2.end();){
+    for(auto iter = filtered_bars2.begin(); iter != filtered_bars2.end();){
         if(iter->size.area() < median_area*0.7 || iter->size.area() > median_area*1.4){
             // std::cout<<"=================area filter================\n";
             // std::cout<<median_area<<" "<<iter->size.area() <<std::endl;
-            iter = filtered_threshs2.erase(iter);
+            iter = filtered_bars2.erase(iter);
         }else{
             ++iter;
         }
     }
 
-    // std::cout<<"=================return threshs================\n";
-    return filtered_threshs2;
+    // std::cout<<"=================return bars================\n";
+    return filtered_bars2;
 }

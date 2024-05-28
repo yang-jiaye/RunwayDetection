@@ -6,7 +6,7 @@ typedef FeatureDetector::Line Line;
 int main()
 {
     // read image
-    std::string path = "../images/4.png";
+    std::string path = "../image/4.png";
     cv::Mat image = cv::imread(path);
 
     // detect runway lines
@@ -19,10 +19,10 @@ int main()
 
     // detect threshold
     std::cout<<"Detecting runway thresholds..."<<std::endl;
-    auto threshs = FeatureDetector::detectThreshold(image, LRLines, false, false);
-    for(auto thresh: threshs){
+    auto bars = FeatureDetector::detectThreshold(image, LRLines, false, false);
+    for(auto bar: bars){
         cv::Point2f vertices[4];
-        thresh.points(vertices);
+        bar.points(vertices);
         for(int i = 0; i < 4; i++){
             cv::line(image, vertices[i], vertices[(i+1)%4], cv::Scalar(0, 0, 255), 2);
         }
@@ -30,7 +30,7 @@ int main()
 
     // detect bottom and upper lines
     std::cout<<"Detecting bottom and upper lines..."<<std::endl;
-    auto BULines = FeatureDetector::detectBottomUpperLines(threshs);
+    auto BULines = FeatureDetector::detectBottomUpperLines(bars);
     for(auto line: BULines){
         FeatureDetector::drawHoughLine(image, line, cv::Scalar(255, 0, 0), 2);
     }

@@ -1,9 +1,5 @@
 #include <opencv2/opencv.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <iostream>
-#include <string>
-#include <vector>
-#include <unistd.h>
+
 #include "feature_detection.h"
 
 typedef FeatureDetector::HoughCoord HoughCoord;
@@ -42,22 +38,28 @@ void playAnimation(const std::string& folderPath, int interval) {
     std::vector<std::string> imageFiles;
     cv::glob(folderPath, imageFiles);
 
+    int i = 0;
+
     for (const auto& imageFile : imageFiles) {
         std::cout<<"[playAnimation]:\tshow image"<<imageFile<<std::endl;
         cv::Mat image = cv::imread(imageFile);
 
         processImage(image);
+        std::stringstream ss;
+        ss << "../result/image" << std::setw(4) << std::setfill('0') << i << ".png";
+        cv::imwrite(ss.str(), image);
         
-        cv::imshow("Animation", image);
-        cv::waitKey(interval);
+        // cv::imshow("Animation", image);
+        // cv::waitKey(interval);
+        // i++;
     }
 
-    cv::destroyAllWindows();
+    // cv::destroyAllWindows();
 }
 
 int main() {
     std::string folderPath = "../data/EuRoc_FAIM_20240401/mav0/cam0/data";
-    int interval = 10;
+    int interval = 1;
 
     playAnimation(folderPath, interval);
 

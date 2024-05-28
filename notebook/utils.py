@@ -133,13 +133,25 @@ def computeResult(grid: list, lineImg, color = (0, 0, 255), draw=False):
 
     return theta, rho
 
+def draw_lines(img, lines, gray_thres):
+    drawn_img = img.copy()
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    for line in lines:
+        x1, y1, x2, y2 = map(int, line[0])
+        average_grayscale = average_grayscale_along_line(gray, x1, y1, x2, y2)
+        if average_grayscale < gray_thres:
+            cv2.line(drawn_img, (x1, y1), (x2, y2), (255, 0, 0), 1, cv2.LINE_AA)
+        else:
+            cv2.line(drawn_img, (x1, y1), (x2, y2), (0, 255, 0), 1, cv2.LINE_AA)
+    plt.imshow(cv2.cvtColor(drawn_img, cv2.COLOR_BGR2RGB))
+
 '''
 Input: 
     Image to detect
 Output:
     line0, line1: 2 runwayline parameters containing (theta, rho)
 '''
-def detectAirportRunway1(img, draw=False, res_name="draw_result"):
+def detectRunwayLine(img, draw=False, res_name="draw_result"):
     # hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     # gray = hsv[:,:,0]
     if img is None:
