@@ -1,6 +1,6 @@
 /**
  * @file feature_detection.cpp
- * @author Yang jiaye (yjy420@sjtu.edu.cn)
+ * @author Yang Jiaye (yjy420@sjtu.edu.cn)
  * @brief feature detection
  * @version 0.1
  * @date 2024-05-28
@@ -143,7 +143,7 @@ HoughCoord FeatureDetector::fitLineFromPoints(const std::vector<cv::Vec2d>& poin
     // hough coord result
     HoughCoord result;
     if (m == 0) {
-        result[1] = M_PI / 2; // Pi/2 radians = 90 degrees
+        result[1] = PI / 2; // Pi/2 radians = 90 degrees
         result[0] = c;
     } else {
         result[1] = std::atan(-1 / m);

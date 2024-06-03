@@ -1,6 +1,6 @@
 /**
  * @file feature_detection.h
- * @author Yang jiaye (yjy420@sjtu.edu.cn)
+ * @author Yang Jiaye (yjy420@sjtu.edu.cn)
  * @brief feature detection modules
  * @version 0.1
  * @date 2024-05-28
